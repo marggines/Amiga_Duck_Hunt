@@ -1,0 +1,1105 @@
+Rem: title screen  
+Screen Open 0,320,256,32,LORES : Curs Off : Flash Off : Change Mouse 2
+Screen Hide 
+Cls 2
+
+Rem: Screen with game informations - panel below main screen 
+Screen Open 1,320,50,32,Lowres : Cls 0 : Screen Display 1,140,249,320,56 : Curs Off : Flash Off : 
+Screen Hide 
+
+Rem: Main game screen
+Screen Open 2,320,256,16,LORES : Cls 0
+Screen Display 2,140,42,320,206
+Curs Off : Flash Off : Change Mouse 2
+Screen Hide 
+
+Global Y_SCREEN_MAX
+Y_SCREEN_MAX=150
+
+Global GAME_STAGE
+ Rem 0-TITE_SCREEN 1-SET_LEVEL_PARAM 2-GAME 
+
+Global STAGE_TITLE_SCREEN_SELECT
+Global STAGE_TITLE_SCREEN
+Global STAGE_SET_LEVEL_PARAMETERS
+Global STAGE_GAME
+Global STAGE_GAME_EXIT
+STAGE_TITLE_SCREEN=0 : STAGE_SET_LEVEL_PARAMETERS=1 : STAGE_GAME=2
+STAGE_TITLE_SCREEN_SELECT=3 : STAGE_GAME_EXIT=4
+GAME_STAGE=STAGE_TITLE_SCREEN
+
+Global TRYING
+Global TRYING_MAX
+TRYING=0
+TRYING_MAX=10
+
+
+Global GAME_MODE
+GAME_MODE=1 : Rem 1: one duck, 2: two ducks
+
+Global BULLETS
+Global DUCKS_SPEED
+Global DUCKS_REQUIRED
+
+Global LEVEL
+Global DUCK_COUNTER
+Global FLY_AWAY_TIMER
+Global DUCK_TIMER
+Global FLY_AWAY_TIME_INTERWAL
+Rem: fly+away_time_interwal - czas po jakim kaczka ucieka
+LEVEL=0 : SCORE=0 : BULLETS=3 : DUCK_COUNTER=0 : TRYING=0 : FLY_AWAY_TIME_INTERWAL=300
+DUCK_TIMER=0
+
+Rem: DUCK 1 global variables 
+Rem: D1D - Duck 1 Direction : D1A$ - Duck 1 Anim String : D1ALIVE - 1=Y 0=N
+Global DUCK_1_BOB
+Global DUCK_1_H
+Global D1A$
+Global DUCK_1_TYPE
+Global DUCK_1_STATUS
+Global Y_DUCK_1_HIT
+
+Rem: DUCK 2 global variables 
+Rem: D2D - Duck 2 Direction : D2A$ - Duck 2 Anim String : D2ALIVE - 1=Y 0=N
+Global DUCK_2_BOB
+Global DUCK_2_H
+Global D2A$
+Global DUCK_2_TYPE
+Global DUCK_2_STATUS
+Global Y_DUCK_2_HIT
+
+Global DUCK_ALIVE
+Global DUCK_FLY_AWAY
+Global DUCK_HIT
+Global DUCK_FALLING
+Global DUCK_DROP
+Global DUCK_CATCHED
+Global DUCK_TIMEOUT
+Global DUCK_IN_GRASS
+Global DUCK_OFF_SCREEN
+
+DUCK_ALIVE=0 : DUCK_FLY_AWAY=1 : DUCK_HIT=2 : DUCK_CATCHED=3 : DUCK_TIMEOUT=4
+DUCK_FALLING=5 : DUCK_DROP=6 : DUCK_IN_GRASS=7 : DUCK_OFF_SCREEN=8
+
+Dim DUCKS_CATCHED(10)
+Global DUCKS_CATCHED()
+
+Rem: adresy grafiki dla rozych wersji kaczek 
+Global DUCK_VER_1
+Global DUCK_VER_2
+Global DUCK_VER_3
+DUCK_VER_1=1 : DUCK_VER_2=21 : DUCK_VER_3=41
+
+Global HISCORE_1
+Global HISCORE_2
+Global SCORE
+Global SCORE_DUCK_TYPE_1
+Global SCORE_DUCK_TYPE_2
+Global SCORE_DUCK_TYPE_3
+Global SCORE_LEVEL
+SCORE=0 : SCORE_DUCK_TYPE_1=500 : SCORE_DUCK_TYPE_2=1000 : SCORE_DUCK_TYPE_3=1500
+SCORE_LEVEL=10000
+HISCORE_1=0
+HISCORE_2=0
+
+Global DDOG_1_BOB
+Global DDOG_1_H
+'Global DDOG_2_BOB 
+'Global DDOG_2_H 
+
+
+Rem ICON Variables   
+Global BULLET_ICON
+Global BLANK_ICON
+Global DUCK_ICON
+Global DUCK_WHITE_ICON
+Global DUCK_POINT_ICON
+Global DUCK_INDICATOR_ICON
+BULLET_ICON=1 : DUCK_POINT_ICON=2 : DUCK_ICON=3 : DUCK_WHITE_ICON=13 : BLANK_ICON=14
+DUCK_INDICATOR_ICON=15
+
+Rem Ile typow kaczek moze byc na jeden etap
+Global TYPE_0_DUCK
+Global TYPE_1_DUCK
+Global TYPE_2_DUCK
+TYPE_0_DUCK=5 : TYPE_1_DUCK=3 : TYPE_2_DUCK=2
+
+
+Limit Mouse 128,42 To 448,200
+
+Procedure SOUND_PLAY[X]
+   Rem: 1 duck drop 
+   Sam Play 15,X,16574
+
+End Proc
+
+Procedure PREPARE_GAME_GRAPHICS
+
+   Erase All 
+   Rem: prepare graphic for panel(bullets, ducks, etc_  
+   Load "gfx/bobs.abk" : Get Bob Palette 
+   Load "gfx/icons.abk"
+   Make Icon Mask 
+   Load "sfx/samples.ABK"
+
+End Proc
+
+Procedure PANEL_BG_SHOW
+   Screen 1
+   Cls 0
+   Load Iff "gfx/panel.iff"
+
+End Proc
+
+Procedure GAME_BG_SHOW
+Rem: Draw bacground static graphics : bg color, tree, grass, bush
+
+   Screen 2
+   Get Bob Palette 
+
+   Cls 7
+
+   'Load Iff "gfx/background.iff" 
+
+   Bob 12,0,149,75
+   Bob 11,255,130,74
+   Bob 10,16,32,73
+
+End Proc
+
+Procedure GAME_BG_ANIM_SHOW
+
+   CHMURA_1_BOB=1
+   CHMURA_2_BOB=2
+   CHMURA_1_H=1
+   CHMURA_2_H=2
+   Channel CHMURA_1_H To Bob CHMURA_1_BOB
+   Channel CHMURA_2_H To Bob CHMURA_2_BOB
+
+   Screen 2
+   Bob CHMURA_1_BOB,-100,30,76
+   Bob CHMURA_2_BOB,-275,70,76
+   Amal CHMURA_1_H,"Loop: Move 600,0,3500;Let X=-100;Jump Loop"
+   Amal On CHMURA_1_H
+   Amal CHMURA_2_H,"Loop: Move 600,0,3500;Let X=-275;Jump Loop"
+   Amal On CHMURA_2_H
+
+End Proc
+
+Procedure GAME_BOB_SET
+Rem: Show ducks dog etc
+
+   Screen 2
+   Rem: Set dog on the scren
+
+   DDOG_1_BOB=8 : DDOG_1_H=8
+   DDOG_2_BOB=9 : DDOG_2_H=9
+
+   Channel DDOG_1_H To Bob DDOG_1_BOB
+   Channel DDOG_2_H To Bob DDOG_2_BOB
+
+   'Bob DDOG_1_BOB,100,160,69 : Rem schowany za trawa 
+   'Bob DDOG_2_BOB,100,160,70 : Rem pies z dwoma kaczkami 
+
+Rem: show duck 
+
+   DUCK_1_BOB=5 : DUCK_1_H=5
+   DUCK_2_BOB=6 : DUCK_2_H=6
+
+   Channel DUCK_1_H To Bob DUCK_1_BOB
+   Channel DUCK_2_H To Bob DUCK_2_BOB
+
+
+End Proc
+
+Procedure DUCK_SET_KIER[S,DUCK_TYPE,SPEED,DUCK_NO]
+Rem: s krawedz ktorej dotkenla kaczka
+Rem: duck_type typ kaczki - kolor
+Rem: speed 
+Rem: DUCK_NO 1 or 2 czy kaczka 1 czy kaczka 2
+   R=Rnd(4)
+
+   Rem: S oznacza ktorejkrawedzi dotkenela kaczka 
+   Rem: 1 UP, 2 DOWN, 4 LEFT, 8 RIGHT 
+   If S=1 and R=0 Then X=-640 : Y=320 : C=10 : DD=6 : Goto A
+   If S=1 and R=1 Then X=-320 : Y=320 : C=10 : DD=6 : Goto A
+   If S=1 and R=2 Then X=-220 : Y=320 : C=10 : DD=6 : Goto A
+   If S=1 and R=3 Then X=320 : Y=320 : C=10 : DD=10 : Goto A
+   If S=1 and R=4 Then X=640 : Y=320 : C=10 : DD=10 : Goto A
+
+   Rem 2 dolna krawedz
+   If S=2 and R=0 Then X=-640 : Y=-320 : C=10 : DD=5 : Goto A
+   If S=2 and R=1 Then X=-320 : Y=-320 : C=10 : DD=5 : Goto A
+   If S=2 and R=2 Then X=220 : Y=-320 : C=10 : DD=9 : Goto A
+   If S=2 and R=3 Then X=320 : Y=-320 : C=10 : DD=9 : Goto A
+   If S=2 and R=4 Then X=640 : Y=-320 : C=10 : DD=9 : Goto A
+
+   Rem Kaczka dotknela lewej krawedzi 
+   If S=4 and R=0 Then X=320 : Y=-640 : C=10 : DD=9 : Goto A
+   If S=4 and R=1 Then X=320 : Y=-320 : C=10 : DD=9 : Goto A
+   If S=4 and R=2 Then X=320 : Y=-220 : C=10 : DD=8 : Goto A
+   If S=4 and R=3 Then X=320 : Y=320 : C=10 : DD=10 : Goto A
+   If S=4 and R=4 Then X=320 : Y=640 : C=10 : DD=10 : Goto A
+
+   Rem Kaczka dotknela prawej krawedzi
+   If S=8 and R=0 Then X=-320 : Y=-640 : C=10 : DD=5 : Goto A
+   If S=8 and R=1 Then X=-320 : Y=-320 : C=10 : DD=5 : Goto A
+   If S=8 and R=2 Then X=-320 : Y=220 : C=10 : DD=4 : Goto A
+   If S=8 and R=3 Then X=-320 : Y=320 : C=10 : DD=6 : Goto A
+   If S=8 and R=4 Then X=-320 : Y=640 : C=10 : DD=6 : Goto A
+
+
+   A:
+
+
+   D1A$=DA$
+
+   If DUCK_TYPE=0
+      If DD=1
+         DA$="Anim 0,(1,4)(2,4)(3,4)(2,4);"
+      End If 
+      If DD=2
+         DA$="Anim 0,(1,4)(2,4)(3,4)(2,4);"
+      End If 
+      If DD=8
+         DA$="Anim 0,(1,4)(2,4)(3,4)(2,4);"
+      End If 
+      If DD=4
+         DA$="Anim 0,(4,4)(5,4)(6,4)(5,4);"
+      End If 
+      If DD=9 or DD=10
+         DA$="Anim 0,(7,4)(8,4)(9,4)(8,4);"
+      End If 
+      If DD=5 or DD=6
+         DA$="Anim 0,(10,4)(11,4)(12,4)(11,4);"
+      End If 
+   End If 
+
+   If DUCK_TYPE=1
+      If DD=1
+         DA$="Anim 0,(21,4)(22,4)(23,4)(22,4);"
+      End If 
+      If DD=2
+         DA$="Anim 0,(21,4)(22,4)(23,4)(22,4);"
+      End If 
+      If DD=8
+         DA$="Anim 0,(21,4)(22,4)(23,4)(22,4);"
+      End If 
+      If DD=4
+         DA$="Anim 0,(24,4)(25,4)(26,4)(25,4);"
+      End If 
+      If DD=9 or DD=10
+         DA$="Anim 0,(27,4)(28,4)(29,4)(28,4);"
+      End If 
+      If DD=5 or DD=6
+         DA$="Anim 0,(30,4)(31,4)(32,4)(31,4);"
+      End If 
+   End If 
+
+   If DUCK_TYPE=2
+      If DD=1
+         DA$="Anim 0,(41,4)(42,4)(43,4)(42,4);"
+      End If 
+      If DD=2
+         DA$="Anim 0,(41,4)(42,4)(43,4)(42,4);"
+      End If 
+      If DD=8
+         DA$="Anim 0,(41,4)(42,4)(43,4)(42,4);"
+      End If 
+      If DD=4
+         DA$="Anim 0,(44,4)(45,4)(46,4)(45,4);"
+      End If 
+      If DD=9 or DD=10
+         DA$="Anim 0,(47,4)(48,4)(49,4)(48,4);"
+      End If 
+      If DD=5 or DD=6
+         DA$="Anim 0,(50,4)(51,4)(52,4)(51,4);"
+      End If 
+   End If 
+
+
+   If DUCK_NO=1
+      D1A$=DA$
+      Amreg(0)=X
+      Amreg(1)=Y
+      Amreg(2)=SPEED
+   End If 
+
+   If DUCK_NO=2
+      D2A$=DA$
+      Amreg(3)=X
+      Amreg(4)=Y
+      Amreg(5)=SPEED
+   End If 
+
+End Proc
+
+Procedure SET_NEW_DUCK_PARAM
+
+   DUCKS_SHOW
+   DUCK_NO_INDICATOR[TRYING]
+
+   A=0
+   While A=0
+      DUCK_1_TYPE=Rnd(2)
+      If DUCK_1_TYPE=0 and TYPE_0_DUCK>0
+         A=1
+         TYPE_0_DUCK=TYPE_0_DUCK-1
+      Else If DUCK_1_TYPE=1 and TYPE_1_DUCK>0
+         A=1
+         TYPE_1_DUCK=TYPE_1_DUCK-1
+      Else If DUCK_1_TYPE=2 and TYPE_2_DUCK>0
+         A=1
+         TYPE_2_DUCK=TYPE_2_DUCK-1
+      End If 
+   Wend 
+
+   Bob DUCK_1_BOB,Rnd(270)+20,160,1
+
+   DUCK_1_STATUS=DUCK_ALIVE
+   SOUND_PLAY[2]
+
+   If GAME_MODE=2
+      DUCK_NO_INDICATOR[TRYING+1]
+
+      A=0
+      While A=0
+         DUCK_1_TYPE=Rnd(2)
+         If DUCK_1_TYPE=0 and TYPE_0_DUCK>0
+            A=1
+            TYPE_0_DUCK=TYPE_0_DUCK-1
+         Else If DUCK_1_TYPE=1 and TYPE_1_DUCK>0
+            A=1
+            TYPE_1_DUCK=TYPE_1_DUCK-1
+         Else If DUCK_1_TYPE=2 and TYPE_2_DUCK>0
+            A=1
+            TYPE_2_DUCK=TYPE_2_DUCK-1
+         End If 
+      Wend 
+
+      Bob DUCK_2_BOB,Rnd(270)+20,160,1
+
+      DUCK_2_STATUS=DUCK_ALIVE
+      SOUND_PLAY[2]
+   End If 
+
+   BULLETS=3
+   BULLETS_SHOW[BULLETS]
+
+   DUCK_TIMER=Timer
+   FLY_AWAY_TIMER=DUCK_TIMER+FLY_AWAY_TIME_INTERWAL
+
+End Proc
+
+Procedure BULLETS_SHOW[X]
+Rem: Show available bullets on screen
+   Screen 1
+   For A=1 To 3
+      Paste Icon 46+((A-1)*8),20,BLANK_ICON
+   Next A
+   If X>0 and X<4
+      For A=1 To X
+         Paste Icon 46+((A-1)*8),20,BULLET_ICON
+      Next A
+   End If 
+   Screen 2
+End Proc
+
+Procedure DUCKS_SHOW
+Rem: Show hit ducks
+
+   Screen 1
+
+   For A=1 To 10
+      Paste Icon 123+((A-1)*8),21,DUCK_WHITE_ICON
+   Next A
+   For A=1 To 10
+      If DUCKS_CATCHED(A-1)=1
+            Paste Icon 123+((A-1)*8),21,DUCK_ICON+A-1
+      End If 
+   Next A
+
+   Screen 2
+End Proc
+
+Procedure DUCK_NO_INDICATOR[X]
+
+   Screen 1
+   Paste Icon 123+((X)*8),21,DUCK_INDICATOR_ICON
+   Screen 2
+End Proc
+
+Procedure NEEDED_DUCKS_SHOW
+
+   Screen 1
+
+   For A=1 To 10
+      Paste Icon 123+((A-1)*8),30,BLANK_ICON
+   Next A
+
+   For A=1 To DUCKS_REQUIRED
+      Paste Icon 123+((A-1)*8),30,DUCK_POINT_ICON
+
+   Next A
+
+   Screen 2
+
+
+End Proc
+
+Procedure PANEL_SCORE_SHOW
+   Screen 1
+   Ink 3,0
+   If GAME_MODE=1
+      If SCORE>HISCORE_1
+         HISCORE_1=SCORE
+      End If 
+      HISCORE=HISCORE_1
+   Else If GAME_MODE=2
+      If SCORE>HISCORE_2
+         HISCORE_2=SCORE
+      End If 
+      HISCORE=HISCORE_2
+   End If 
+
+
+   If SCORE>9999999 Then SCORE=9999999
+   SCORE$=Str$(SCORE)
+   SCORE_LEN=Len(SCORE$)
+
+   Text 225,26,Space$(8-SCORE_LEN)+Mid$(SCORE$,2)
+
+   If HISCORE>9999999 Then HISCORE=9999999
+   HISCORE$=Str$(HISCORE)
+   HISCORE_LEN=Len(HISCORE$)
+
+   Text 225,34,Space$(8-HISCORE_LEN)+Mid$(HISCORE$,2)
+   ' Text 241,34,"score"
+
+   Screen 2
+
+End Proc
+
+Procedure PANEL_LEVEL_SHOW
+   Screen 1
+   Ink 3,0
+   'LEVEL=0 
+   If LEVEL>999 Then LEVEL=0
+   LEVEL$=Str$(LEVEL)
+   LEVEL_LEN=Len(LEVEL$)
+
+
+   Text 12,30,Space$(4-LEVEL_LEN)+Mid$(LEVEL$,2)
+
+   Screen 2
+
+End Proc
+
+Procedure DUCKS_SHOW_ALIGNED[X]
+Rem: Show hit ducks
+   Screen 1
+   For A=1 To 10
+      Paste Icon 123+((A-1)*8),21,DUCK_WHITE_ICON
+   Next A
+
+   If X>0 and X<=10
+      For A=1 To X
+         SOUND_PLAY[9]
+         Paste Icon 123+((A-1)*8),21,DUCK_ICON+A-1
+         Wait 15
+      Next A
+   End If 
+   Screen 2
+End Proc
+
+Procedure CATCH_DUCK_BY_DOG
+Rem: Animacja psa ktory pokazue upolowana kaczke 
+
+      Bob DDOG_1_BOB,X Bob(DUCK_1_BOB),160,69
+      If X Bob(DUCK_1_BOB)>200
+         Bob DDOG_1_BOB,170,160,69
+      End If 
+      If X Bob(DUCK_1_BOB)<30
+         Bob DDOG_1_BOB,50,160,69
+      End If 
+      SOUND_PLAY[10]
+      Amal DDOG_1_H,"Move 0,-42,25;Move 0,0,15;Move 0,42,25"
+      Amal On DDOG_1_H
+      Wait 75
+      BULLETS=3
+      BULLETS_SHOW[BULLETS]
+
+      DUCK_1_STATUS=DUCK_IN_GRASS
+
+      If GAME_MODE=2
+         DUCK_2_STATUS=DUCK_IN_GRASS
+      End If 
+      Bob Off DDOG_1_BOB
+
+End Proc
+
+Procedure CATCH_DUCKS_BY_DOG
+Rem: Animacja psa ktory pokazue upolowana kaczke 
+
+      Bob DDOG_1_BOB,X Bob(DUCK_1_BOB),160,70
+      If X Bob(DUCK_1_BOB)>200
+         Bob DDOG_1_BOB,170,160,70
+      End If 
+      If X Bob(DUCK_1_BOB)<30
+         Bob DDOG_1_BOB,50,160,70
+      End If 
+      SOUND_PLAY[10]
+      Amal DDOG_1_H,"Move 0,-42,25;Move 0,0,15;Move 0,42,25"
+      Amal On DDOG_1_H
+      Wait 75
+      'BULLETS=3 
+      'BULLETS_SHOW[BULLETS] 
+
+      DUCK_1_STATUS=DUCK_IN_GRASS
+      DUCK_2_STATUS=DUCK_IN_GRASS
+      Bob Off DDOG_1_BOB
+End Proc
+
+Procedure LAUGHING_DOG
+Rem: Animacja psa ktory sie smieje 
+
+   If Y Bob(DUCK_1_BOB)<-20
+      SOUND_PLAY[2]
+      Bob DDOG_1_BOB,160,160,71
+      Wait 50
+      SOUND_PLAY[7]
+      Amal DDOG_1_H,"Anim 0,(71,5)(72,5);Move 0,-42,25;Move 0,0,15;Move 0,42,25"
+      Amal On DDOG_1_H
+      Wait 75
+      'BULLETS=3 
+      'BULLETS_SHOW[BULLETS] 
+
+      DUCK_1_STATUS=DUCK_IN_GRASS
+
+      If GAME_MODE=2
+         DUCK_2_STATUS=DUCK_IN_GRASS
+      End If 
+   Bob Off DDOG_1_BOB
+   End If 
+
+End Proc
+
+Procedure JUMPING_DOG_ANIM
+
+   Screen 2 : Screen Show 
+
+   Channel 15 To Bob 15 : Bob 15,0,140,61
+
+   A1$="Anim 0,(62,7)(63,7)(64,7)(65,7);"
+   A2$="Move 35,0,85;"
+   A3$="Anim 0,(61,7)(62,7);"
+   A4$="Move 0,0,50;"
+   A5$="Move 35,0,85;"
+   A6$="Anim 0,(66,1);" : Rem Smile frame
+   A7$="Move 0,0,50;"
+   A8$="Anim 0,(67,10);" : Rem Jump frame up
+   A9$="Move 15,-60,15;"
+   A10$="Anim 0,(68,10);" : Rem Jump frame down
+   A11$="Move 15,60,15;"
+
+
+   A$=A1$+A2$+A3$+A4$+A1$+A5$+A3$+A4$+A6$+A7$+A8$+A9$+A10$
+   Amal 15,A$ : Amal On 15
+
+   While Chanmv(15) : Wend : Amal Off 15 : Bob Off 15
+
+
+
+   Bob 7,X Bob(15),Y Bob(15),68 : Channel 7 To Bob 7
+   A$=A11$
+   Amal 7,A$
+   Amal On 7 : While Chanmv(7) : Wend : Amal Off 7 : Bob Off 7
+
+  SOUND_PLAY[5]
+   Wait 15
+
+   SOUND_PLAY[5]
+   Wait 15
+   Bob Off 15
+
+End Proc
+
+Procedure CHECK_SHOOTING[M]
+
+   If M=1 and BULLETS>0
+
+      BULLETS=BULLETS-1
+      BULLETS_SHOW[BULLETS]
+      SOUND_PLAY[4]
+
+      If X Mouse-128>=X Bob(DUCK_1_BOB)+5 and X Mouse-128<X Bob(DUCK_1_BOB)+35
+      If Y Mouse-42>=Y Bob(DUCK_1_BOB)+5 and Y Mouse-42<Y Bob(DUCK_1_BOB)+35
+
+         Y_DUCK_1_HIT=Y Bob(DUCK_1_BOB)
+         Amal Off DUCK_1_H
+         DUCK_1_STATUS=DUCK_HIT
+
+         DUCK_COUNTER=DUCK_COUNTER+1
+
+         DUCKS_CATCHED(TRYING)=1
+         DUCKS_SHOW
+
+
+         If GAME_MODE=2 and DUCK_2_STATUS=DUCK_ALIVE
+            DUCK_NO_INDICATOR[TRYING+1]
+         End If 
+         If DUCK_1_TYPE=0
+            Amal DUCK_1_H,"Anim 0,(13,10);Move 0,0,40;Anim 0,(14,2)(15,2)(16,2)(17,2);Move 0,300,100;"
+            SCORE=SCORE+SCORE_DUCK_TYPE_1
+         End If 
+         If DUCK_1_TYPE=1
+            Amal DUCK_1_H,"Anim 0,(33,10);Move 0,0,40;Anim 0,(34,2)(35,2)(36,2)(37,2);Move 0,300,100;"
+            SCORE=SCORE+SCORE_DUCK_TYPE_2
+         End If 
+         If DUCK_1_TYPE=2
+            Amal DUCK_1_H,"Anim 0,(53,10);Move 0,0,40;Anim 0,(54,2)(55,2)(56,2)(57,2);Move 0,300,100;"
+            SCORE=SCORE+SCORE_DUCK_TYPE_3
+         End If 
+
+         PANEL_SCORE_SHOW
+         Amal On DUCK_1_H
+      End If 
+      End If 
+
+      'If X=2
+      If GAME_MODE=2
+      If X Mouse-128>=X Bob(DUCK_2_BOB)+5 and X Mouse-128<X Bob(DUCK_2_BOB)+35
+      If Y Mouse-42>=Y Bob(DUCK_2_BOB)+5 and Y Mouse-42<Y Bob(DUCK_2_BOB)+35
+
+         Y_DUCK_2_HIT=Y Bob(DUCK_2_BOB)
+         Amal Off DUCK_2_H
+         DUCK_2_STATUS=DUCK_HIT
+
+         DUCK_COUNTER=DUCK_COUNTER+1
+
+         DUCKS_CATCHED(TRYING+1)=1
+         DUCKS_SHOW
+
+         If DUCK_1_STATUS=DUCK_ALIVE
+            DUCK_NO_INDICATOR[TRYING]
+         End If 
+         If DUCK_2_TYPE=0
+            Amal DUCK_2_H,"Anim 0,(13,10);Move 0,0,40;Anim 0,(14,2)(15,2)(16,2)(17,2);Move 0,300,100;"
+            SCORE=SCORE+SCORE_DUCK_TYPE_1
+         End If 
+         If DUCK_2_TYPE=1
+            Amal DUCK_2_H,"Anim 0,(33,10);Move 0,0,40;Anim 0,(34,2)(35,2)(36,2)(37,2);Move 0,300,100;"
+            SCORE=SCORE+SCORE_DUCK_TYPE_2
+         End If 
+         If DUCK_2_TYPE=2
+            Amal DUCK_2_H,"Anim 0,(53,10);Move 0,0,40;Anim 0,(54,2)(55,2)(56,2)(57,2);Move 0,300,100;"
+            SCORE=SCORE+SCORE_DUCK_TYPE_3
+         End If 
+
+         PANEL_SCORE_SHOW
+         Amal On DUCK_2_H
+      End If 
+      End If 
+      End If 
+   End If 
+
+End Proc
+
+Procedure TITLE_SCREEN
+
+   Limit Mouse 128,42 To 448,300
+   Screen Hide 1
+   Screen Hide 2
+   Screen 0 : Screen Show : Screen To Front 
+   Load Iff "gfx/title.iff"
+
+   Get Icon 0,25,0,0 To 320,256
+
+   GAME_STAGE=STAGE_TITLE_SCREEN_SELECT
+   Wait 20
+   SOUND_PLAY[10]
+End Proc
+
+Procedure TITLE_SCREEN_SELECT
+
+   Screen 0 : Screen Show : Screen To Front 
+
+   LAST_X=4
+
+   Reserve Zone 1
+   Reserve Zone 2
+   Set Zone 1,80,200 To 155,250
+   Set Zone 2,165,200 To 240,250
+
+   While GAME_STAGE=STAGE_TITLE_SCREEN_SELECT
+
+     If Key State(69)=True
+          GAME_STAGE=STAGE_GAME_EXIT
+          Erase All 
+          Goto DUCK_HUNT_EXIT
+      End If 
+
+      M=Mouse Click
+      X=Hzone(X Mouse,Y Mouse)
+
+      If X=0 and LAST_X<>X
+          Paste Icon 0,0,25
+          Paste Icon 80,200,20
+          Paste Icon 165,200,22
+          LAST_X=X
+      End If 
+
+      If X=1 and LAST_X<>X
+         Paste Icon 0,0,25
+         Paste Icon 80,200,21
+         Paste Icon 165,200,22
+         LAST_X=X
+         SOUND_PLAY[5]
+      End If 
+
+      If X=2 and LAST_X<>X
+         Paste Icon 0,0,25
+         Paste Icon 80,200,20
+         Paste Icon 165,200,23
+         LAST_X=2
+         SOUND_PLAY[5]
+      End If 
+
+   If M=1 and X=1
+      GAME_MODE=1
+      SOUND_PLAY[2]
+      GAME_STAGE=STAGE_SET_LEVEL_PARAMETERS
+     Wait 10
+   End If 
+
+   If M=1 and X=2
+      GAME_MODE=2
+      SOUND_PLAY[2]
+      GAME_STAGE=STAGE_SET_LEVEL_PARAMETERS
+     Wait 10
+   End If 
+
+   Wait Vbl 
+   Wend 
+
+   SCORE=0
+   LEVEL=0
+
+   'Screen Hide 
+   'Fade Screen 
+   Wait 50
+   Screen Hide 
+   DUCK_HUNT_EXIT:
+End Proc
+
+Procedure ZERO_DUCKS_CATCHED_LIST
+   For I=0 To 10
+      DUCKS_CATCHED(I)=0
+   Next I
+End Proc
+
+Procedure GAME_SET_LEVEL_PARAMETERS
+
+   DUCKS_REQUIRED=6
+   If LEVEL=0 Then DUCKS_SPEED=200 : DUCKS_REQUIRED=6
+   If LEVEL=1 Then DUCKS_SPEED=190 : DUCKS_REQUIRED=6
+   If LEVEL=2 Then DUCKS_SPEED=180 : DUCKS_REQUIRED=6
+   If LEVEL=3 Then DUCKS_SPEED=180 : DUCKS_REQUIRED=7
+   If LEVEL=4 Then DUCKS_SPEED=170 : DUCKS_REQUIRED=7
+   If LEVEL=6 Then DUCKS_SPEED=170 : DUCKS_REQUIRED=7
+   If LEVEL=7 Then DUCKS_SPEED=160 : DUCKS_REQUIRED=7
+   If LEVEL=8 Then DUCKS_SPEED=160 : DUCKS_REQUIRED=8
+   If LEVEL=9 Then DUCKS_SPEED=150 : DUCKS_REQUIRED=8
+   If LEVEL=10 Then DUCKS_SPEED=150 : DUCKS_REQUIRED=8
+   If LEVEL=11 Then DUCKS_SPEED=140 : DUCKS_REQUIRED=9
+   If LEVEL=12 Then DUCKS_SPEED=140 : DUCKS_REQUIRED=9
+   If LEVEL=13 Then DUCKS_SPEED=130 : DUCKS_REQUIRED=9
+   If LEVEL=14 Then DUCKS_SPEED=130 : DUCKS_REQUIRED=10
+   If LEVEL=15 Then DUCKS_SPEED=120 : DUCKS_REQUIRED=10
+   If LEVEL=16 Then DUCKS_SPEED=120 : DUCKS_REQUIRED=10
+   If LEVEL=17 Then DUCKS_SPEED=110 : DUCKS_REQUIRED=10
+   If LEVEL=18 Then DUCKS_SPEED=110 : DUCKS_REQUIRED=10
+   If LEVEL=19 Then DUCKS_SPEED=100 : DUCKS_REQUIRED=10
+   If LEVEL=20 Then DUCKS_SPEED=100 : DUCKS_REQUIRED=10
+   If LEVEL=21 Then DUCKS_SPEED=90 : DUCKS_REQUIRED=10
+   If LEVEL=22 Then DUCKS_SPEED=90 : DUCKS_REQUIRED=10
+   If LEVEL>22 Then DUCKS_SPEED=80 : DUCKS_REQUIRED=10
+
+   TYPE_0_DUCK=5 : TYPE_1_DUCK=3 : TYPE_2_DUCK=2
+
+   DUCK_COUNTER=0
+
+
+   FLY_AWAY_TIME_INTERWAL=300
+
+   TRYING=0
+
+   DUCK_1_STATUS=DUCK_IN_GRASS
+
+   If GAME_MODE=2 Then DUCK_2_STATUS=DUCK_IN_GRASS
+
+   GAME_STAGE=STAGE_GAME
+
+End Proc
+
+Procedure GAME
+   Screen Show 2 : Screen Show 1
+
+   Limit Mouse 128,42 To 448,200
+
+   GAME_BOB_SET
+
+
+   ZERO_DUCKS_CATCHED_LIST
+
+   DUCKS_SHOW
+   BULLETS_SHOW[BULLETS]
+   NEEDED_DUCKS_SHOW
+   PANEL_SCORE_SHOW
+   PANEL_LEVEL_SHOW
+   JUMPING_DOG_ANIM
+
+   SET_NEW_DUCK_PARAM
+
+   Screen 2
+
+   DUCK_TIMER=Timer
+   FLY_AWAY_TIMER=DUCK_TIMER+300
+
+
+   While TRYING<TRYING_MAX
+
+
+      If Key State(69)=True
+          GAME_STAGE=STAGE_TITLE_SCREEN
+          Goto GAME_END
+      End If 
+
+
+
+
+      M=Mouse Click
+
+      CHECK_SHOOTING[M]
+
+      If DUCK_1_STATUS=DUCK_HIT
+         If Y_DUCK_1_HIT<Y Bob(DUCK_1_BOB)
+            DUCK_1_STATUS=DUCK_FALLING
+            SOUND_PLAY[3]
+            Y_DUCK_1_HTI=Y_DUCK_HIT+300
+         End If 
+      End If 
+
+      If DUCK_1_STATUS=DUCK_FALLING
+         If Y Bob(DUCK_1_BOB)>=Y_SCREEN_MAX
+            SOUND_PLAY[1]
+            DUCK_1_STATUS=DUCK_DROP
+         End If 
+      End If 
+
+      If GAME_MODE=2
+
+         If DUCK_1_STATUS=DUCK_OFF_SCREEN and DUCK_2_STATUS=DUCK_OFF_SCREEN
+           LAUGHING_DOG
+
+         Else If DUCK_1_STATUS=DUCK_DROP and DUCK_2_STATUS=DUCK_DROP
+            Wait 50
+            CATCH_DUCKS_BY_DOG
+         Else If DUCK_1_STATUS=DUCK_DROP and DUCK_2_STATUS=DUCK_OFF_SCREEN
+            Wait 50
+            CATCH_DUCK_BY_DOG
+
+         Else If DUCK_1_STATUS=DUCK_OFF_SCREEN and DUCK_2_STATUS=DUCK_DROP
+            Wait 50
+            CATCH_DUCK_BY_DOG
+         End If 
+
+         If DUCK_1_STATUS=DUCK_IN_GRASS and DUCK_2_STATUS=DUCK_IN_GRASS
+            TRYING=TRYING+2
+            If TRYING<TRYING_MAX
+               SET_NEW_DUCK_PARAM
+            End If 
+         End If 
+
+
+         If DUCK_2_STATUS=DUCK_HIT
+            If Y_DUCK_2_HIT<Y Bob(DUCK_2_BOB)
+               DUCK_2_STATUS=DUCK_FALLING
+               SOUND_PLAY[3]
+               Y_DUCK_2_HTI=Y_DUCK_HIT+300
+            End If 
+         End If 
+
+         If DUCK_2_STATUS=DUCK_FALLING
+            If Y Bob(DUCK_2_BOB)>=Y_SCREEN_MAX
+               SOUND_PLAY[1]
+               DUCK_2_STATUS=DUCK_DROP
+            End If 
+         End If 
+
+         If DUCK_TIMER>FLY_AWAY_TIMER and DUCK_2_STATUS=DUCK_ALIVE
+            DUCK_2_STATUS=DUCK_TIMEOUT
+            'Y_DUCK_TEMP=Y Bob(DUCK_2_BOB) 
+         End If 
+
+
+         If DUCK_2_STATUS=DUCK_TIMEOUT
+               DUCK_SET_KIER[2,DUCK_2_TYPE,DUCKS_SPEED,2]
+               Amal DUCK_2_H,D2A$+"Move RD,RE,RF;"
+               Amal On DUCK_2_H
+               DUCK_2_STATUS=DUCK_FLY_AWAY
+         End If 
+
+         If DUCK_2_STATUS=DUCK_FLY_AWAY
+             If Y Bob(DUCK_2_BOB)<20
+                DUCK_2_STATUS=DUCK_OFF_SCREEN
+             End If 
+         End If 
+
+      End If 
+
+      If GAME_MODE=1
+         If DUCK_1_STATUS=DUCK_DROP
+            Wait 50
+            CATCH_DUCK_BY_DOG
+         End If 
+
+         If DUCK_1_STATUS=DUCK_OFF_SCREEN
+           LAUGHING_DOG
+         End If 
+
+         If DUCK_1_STATUS=DUCK_IN_GRASS
+            Inc TRYING
+            If TRYING<TRYING_MAX
+               SET_NEW_DUCK_PARAM
+            End If 
+         End If 
+
+      End If 
+
+      If DUCK_TIMER>FLY_AWAY_TIMER and DUCK_1_STATUS=DUCK_ALIVE
+         DUCK_1_STATUS=DUCK_TIMEOUT
+      End If 
+
+
+
+      If DUCK_1_STATUS=DUCK_TIMEOUT
+
+         DUCK_SET_KIER[2,DUCK_1_TYPE,DUCKS_SPEED,1]
+         Amal DUCK_1_H,D1A$+"Move RA,RB,RC;"
+         Amal On DUCK_1_H
+         DUCK_1_STATUS=DUCK_FLY_AWAY
+      End If 
+
+      If DUCK_1_STATUS=DUCK_FLY_AWAY
+        If Y Bob(DUCK_1_BOB)<20
+           DUCK_1_STATUS=DUCK_OFF_SCREEN
+        End If 
+      End If 
+
+
+
+      If DUCK_1_STATUS=DUCK_ALIVE
+         If X Bob(DUCK_1_BOB)<5
+            DUCK_SET_KIER[4,DUCK_1_TYPE,DUCKS_SPEED,1]
+            Amal DUCK_1_H,D1A$+"Move RA,RB,RC;"
+            Amal On DUCK_1_H
+         End If 
+         If X Bob(DUCK_1_BOB)>290
+            DUCK_SET_KIER[8,DUCK_1_TYPE,DUCKS_SPEED,1]
+            Amal DUCK_1_H,D1A$+"Move RA,RB,RC;"
+            Amal On DUCK_1_H
+         End If 
+         If Y Bob(DUCK_1_BOB)<5
+            'DUCK_1_R=0
+            DUCK_SET_KIER[1,DUCK_1_TYPE,DUCKS_SPEED,1]
+            Amal DUCK_1_H,D1A$+"Move RA,RB,RC;"
+            Amal On DUCK_1_H
+         End If 
+         If Y Bob(DUCK_1_BOB)>150
+            DUCK_SET_KIER[2,DUCK_1_TYPE,DUCKS_SPEED,1]
+            Amal DUCK_1_H,D1A$+"Move RA,RB,RC;"
+            Amal On DUCK_1_H
+         End If 
+      End If 
+
+   If GAME_MODE=2
+
+      If DUCK_2_STATUS=DUCK_ALIVE
+         If X Bob(DUCK_2_BOB)<5
+            DUCK_SET_KIER[4,DUCK_2_TYPE,DUCKS_SPEED,2]
+            Amal DUCK_2_H,D2A$+"Move RD,RE,RF;"
+            Amal On DUCK_2_H
+         End If 
+         If X Bob(DUCK_2_BOB)>290
+            DUCK_SET_KIER[8,DUCK_2_TYPE,DUCKS_SPEED,2]
+            Amal DUCK_2_H,D2A$+"Move RD,RE,RF;"
+            Amal On DUCK_2_H
+         End If 
+         If Y Bob(DUCK_2_BOB)<5
+            DUCK_SET_KIER[1,DUCK_2_TYPE,DUCKS_SPEED,2]
+            Amal DUCK_2_H,D2A$+"Move RD,RE,RF;"
+            Amal On DUCK_2_H
+         End If 
+         If Y Bob(DUCK_2_BOB)>150
+            DUCK_SET_KIER[2,DUCK_2_TYPE,DUCKS_SPEED,2]
+            Amal DUCK_2_H,D2A$+"Move RD,RE,RF;"
+            Amal On DUCK_2_H
+         End If 
+      End If 
+   End If 
+      DUCK_TIMER=Timer
+   Wend 
+
+   DUCKS_SHOW_ALIGNED[DUCK_COUNTER]
+
+   If DUCK_COUNTER>=DUCKS_REQUIRED
+      LEVEL=LEVEL+1
+      If DUCK_COUNTER=10
+         SOUND_PLAY[6]
+         SCORE=SCORE+SCORE_LEVEL
+      End If 
+      GAME_STAGE=STAGE_SET_LEVEL_PARAMETERS
+   End If 
+   If DUCK_COUNTER<DUCKS_REQUIRED
+      LEVEL=0
+      SOUND_PLAY[8]
+      GAME_STAGE=STAGE_TITLE_SCREEN
+      Wait 50
+
+
+   End If 
+
+   If GAME_MODE=1
+      If SCORE>HISCORE_1
+         HISCORE_1=SCORE
+      End If 
+   Else If GAME_MODE=2
+      If SCORE>HISCORE_2
+         HISCORE_2=SCORE
+      End If 
+   End If 
+
+
+   Wait 50
+   GAME_END:
+End Proc
+
+PREPARE_GAME_GRAPHICS
+
+GAME_BG_SHOW
+
+Double Buffer 
+PANEL_BG_SHOW
+GAME_BG_ANIM_SHOW
+
+While GAME_STAGE<>STAGE_GAME_EXIT
+If GAME_STAGE=STAGE_TITLE_SCREEN Then TITLE_SCREEN
+If GAME_STAGE=STAGE_TITLE_SCREEN_SELECT Then TITLE_SCREEN_SELECT
+If GAME_STAGE=STAGE_GAME Then GAME
+If GAME_STAGE=STAGE_SET_LEVEL_PARAMETERS Then GAME_SET_LEVEL_PARAMETERS
+
+
+Wend 
+
+
